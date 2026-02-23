@@ -1,4 +1,5 @@
-import Book from "../models/Book.js";
+import e from "express";
+import { Book, Rating } from "../models/Book.js";
 
 export const getBooks = async (req, res) => {
     try {
@@ -32,8 +33,26 @@ export const getBestRatingsBooks = async (req, res) => {
 
 export const createOneBook = async (req, res) => {
     try {
-        res.status(200).json({ req: "sdfsdf" });
+        const body = JSON.parse(req.body.book);
+        const rating = new Rating({
+            userId: req.auth.userId,
+            grade: body.ratings[0].grade,
+        });
+        await rating.save();
+        delete body.ratings;
+        delete body.userId;
+        const url = `http://${req.get("host")}/${req.file.destination}/${req.file.filename}`;
+        console.log(url);
+        const book = new Book({
+            userId: req.auth.userId,
+            ...body,
+            ratings: [rating._id],
+            imageUrl: url,
+        });
+        await book.save();
+        res.status(200).json({ message: "Livre crée" });
     } catch (error) {
+        console.log(error);
         res.status(400).json({ message: "Erreur" });
     }
 };
