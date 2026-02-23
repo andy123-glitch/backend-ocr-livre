@@ -1,12 +1,19 @@
-const express = require("express");
-const mongoose = require("mongoose");
-const path = require("path");
+import express from "express";
+import mongoose from "mongoose";
+
+import { fileURLToPath } from "url";
+import { dirname, join } from "path";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Now you can use __dirname normally
+console.log(__dirname);
 
 const app = express();
 
-
 mongoose
-    .connect("mongodb://root:example@localhost:27017/test?authSource=admin")
+    .connect("mongodb://root:example@localhost:27017/LivreAPI?authSource=admin")
     .then(() => console.log("connexion a mongoDB reussi !"))
     .catch((e) => console.log("Erreur de connexion a mongodb : " + e));
 
@@ -26,6 +33,6 @@ app.use((req, res, next) => {
     next();
 });
 
-app.use("/images", express.static(path.join(__dirname, "images")));
+app.use("/images", express.static(join(__dirname, "images")));
 
-module.exports = app;
+export default app;
