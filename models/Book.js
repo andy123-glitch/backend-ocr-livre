@@ -11,7 +11,7 @@ const bookSchema = mongoose.Schema({
     year: { type: Number, required: true },
     genre: { type: String, required: true },
     ratings: [{ type: Schema.Types.ObjectId, ref: "Rating" }],
-    averageRatings: { type: Number},
+    averageRating: { type: Number },
 });
 
 export const Book = mongoose.model("Book", bookSchema);

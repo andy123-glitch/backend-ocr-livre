@@ -13,7 +13,8 @@ export const getBooks = async (req, res) => {
 
 export const getOneBook = async (req, res) => {
     try {
-        const book = await Book.find({ _id: req.params.id });
+        const book = await Book.find({ _id: req.params.id }).populate("ratings").exec();
+        console.log(req.params.id);
         res.status(200).json(book);
     } catch (error) {
         console.error(error);
@@ -51,6 +52,17 @@ export const createOneBook = async (req, res) => {
         });
         await book.save();
         res.status(200).json({ message: "Livre crée" });
+    } catch (error) {
+        console.log(error);
+        res.status(400).json({ message: "Erreur" });
+    }
+};
+
+export const deleteOneBook = async (req, res) => {
+    try {
+        await Book.findOneAndDelete({ _id: req.params.id }).exec();
+        
+        res.status(200).json({ message: "Livre supprimée" });
     } catch (error) {
         console.log(error);
         res.status(400).json({ message: "Erreur" });
