@@ -1,5 +1,4 @@
 import mongoose from "mongoose";
-import mongoose_unique_validator from "mongoose-unique-validator";
 
 const bookSchema = mongoose.Schema({
     userId: { type: String, required: true },

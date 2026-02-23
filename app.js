@@ -4,7 +4,8 @@ import mongoose from "mongoose";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
 
-import userRoutes from './routes/user.js';
+import userRoutes from "./routes/user.js";
+import bookRoutes from "./routes/book.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -37,7 +38,7 @@ app.use((req, res, next) => {
 
 app.use("/images", express.static(join(__dirname, "images")));
 
-app.use("/api/auth",userRoutes)
-
+app.use("/api/auth", userRoutes);
+app.use("/api/books", bookRoutes);
 
 export default app;
