@@ -37,7 +37,7 @@ app.use((req, res, next) => {
 
 app.use("/images", express.static(join(__dirname, "images")));
 
-app.use("/api/",userRoutes)
+app.use("/api/auth",userRoutes)
 
 
 export default app;
