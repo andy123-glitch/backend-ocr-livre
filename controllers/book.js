@@ -105,6 +105,43 @@ export const deleteOneBook = async (req, res) => {
 };
 
 /**
+ * Mettre a jour un livre
+ * @param {*} req
+ * @param {*} res
+ */
+
+export const updateBook = async (req, res) => {
+    try {
+        let book = req.body;
+        let image = false;
+        // Verifie que l'utilisateur change l'image
+        if (req.file !== undefined) {
+            book = JSON.parse(req.body.book);
+            image = true;
+        }
+
+        delete book.ratings;
+        delete book.averageRating;
+        book.userId = req.auth.userId;
+        if (image) {
+            // Recuper l'ancienne url de l'image pour la supprimer
+            const oldBook = await Book.findById({ _id: req.params.id });
+            const oldUrl = "images/" + oldBook.imageUrl.split("/images/")[1];
+            fs.unlinkSync(oldUrl);
+
+            const newUrl = `http://${req.get("host")}/${req.file.destination}/${req.file.filename}`;
+            book.imageUrl = newUrl;
+        }
+        
+        await Book.updateOne({ _id: req.params.id }, { ...book });
+        res.status(200).json({ message: "Livre modifie" });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Erreur" });
+    }
+};
+
+/**
  * Permet d'ajouter une note a un livre.
  * Vreifie que l'id du middlewere et de la requete soit identique
  * Vreifie que l'id du parametre soit un nombre, soit inferieur a 5 et supperieur a 0
