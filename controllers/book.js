@@ -85,6 +85,7 @@ export const createOneBook = async (req, res) => {
 
 export const deleteOneBook = async (req, res) => {
     try {
+        console.log(req);
         const book = await Book.findById({ _id: req.params.id });
         const url = "images/" + book.imageUrl.split("/images/")[1];
         // Permet de supprimer un fichier et appele une fonction quand le fichier et supprimer ou qu'une erreur s'est produite

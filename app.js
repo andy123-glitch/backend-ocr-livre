@@ -1,5 +1,6 @@
 import express from "express";
 import mongoose from "mongoose";
+import "dotenv/config";
 
 import userRoutes from "./routes/user.js";
 import bookRoutes from "./routes/book.js";
@@ -12,7 +13,7 @@ const __dirname = dirname(__filename);
 
 const app = express();
 try {
-    const mongodb = await mongoose.connect("mongodb://root:example@localhost:27017/LivreAPI?authSource=admin", {
+    const mongodb = await mongoose.connect(process.env.DATABASE_URL, {
         serverSelectionTimeoutMS: 5000,
     });
     console.log("Connexion a la base de donnée reussi");
@@ -20,12 +21,17 @@ try {
     app.use(express.json());
 
     app.use((req, res, next) => {
-        if (req.method !== "OPTIONS") console.log(`Requete ${req.method} : ${req.url}`);
+        if (req.method !== "OPTIONS") {
+            console.log(`[${req.protocol}]Requete ${req.method} : ${req.url} / `);
+        }
         next();
     });
     app.use((req, res, next) => {
         res.setHeader("Access-Control-Allow-Origin", "*");
-        res.setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content, Accept, Content-Type, Authorization");
+        res.setHeader(
+            "Access-Control-Allow-Headers",
+            "Origin, X-Requested-With, Content, Accept, Content-Type, Authorization",
+        );
         res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH, OPTIONS");
         next();
     });

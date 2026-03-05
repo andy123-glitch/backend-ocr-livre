@@ -1,6 +1,6 @@
 import bcrypt from "bcrypt";
 import jsonwebtoken from "jsonwebtoken";
-
+import 'dotenv/config';
 import User from "../models/User.js";
 
 /**
@@ -49,7 +49,7 @@ export const login = async (req, res) => {
         res.status(200).json({
             userId: user._id,
             // Signe un token JWT avec l'ID de l'utilisateur en payload qui expire dans 24h
-            token: jsonwebtoken.sign({ userId: user._id }, "RANDOM_TOKEN_SECRET", {
+            token: jsonwebtoken.sign({ userId: user._id }, process.env.JWT_SECRET, {
                 expiresIn: "24h",
             }),
         });
