@@ -85,8 +85,10 @@ export const createOneBook = async (req, res) => {
 
 export const deleteOneBook = async (req, res) => {
     try {
-        console.log(req);
         const book = await Book.findById({ _id: req.params.id });
+        if (book.userId !== req.auth.userId) {
+            throw new Error("Unauthorize");
+        }
         const url = "images/" + book.imageUrl.split("/images/")[1];
         // Permet de supprimer un fichier et appele une fonction quand le fichier et supprimer ou qu'une erreur s'est produite
         await fs.unlink(url, async (err) => {
@@ -113,6 +115,11 @@ export const deleteOneBook = async (req, res) => {
 
 export const updateBook = async (req, res) => {
     try {
+        const oldBook = await Book.findById({ _id: req.params.id });
+        if (oldBook.userId !== req.auth.userId) {
+            throw new Error("Unauthorize");
+        }
+
         let book = req.body;
         let image = false;
         // Verifie que l'utilisateur change l'image
@@ -126,14 +133,13 @@ export const updateBook = async (req, res) => {
         book.userId = req.auth.userId;
         if (image) {
             // Recuper l'ancienne url de l'image pour la supprimer
-            const oldBook = await Book.findById({ _id: req.params.id });
             const oldUrl = "images/" + oldBook.imageUrl.split("/images/")[1];
             fs.unlinkSync(oldUrl);
 
             const newUrl = `http://${req.get("host")}/${req.file.destination}/${req.file.filename}`;
             book.imageUrl = newUrl;
         }
-        
+
         await Book.updateOne({ _id: req.params.id }, { ...book });
         res.status(200).json({ message: "Livre modifie" });
     } catch (error) {
