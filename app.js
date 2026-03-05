@@ -15,9 +15,10 @@ const __dirname = dirname(__filename);
 
 const app = express();
 try {
-    const mongodb = await mongoose.connect(process.env.DATABASE_URL, {
+    await mongoose.connect(process.env.DATABASE_URL, {
         serverSelectionTimeoutMS: 5000,
     });
+        
     console.log("Connexion a la base de donnée reussi");
 
     /*const limiter = rateLimit({
