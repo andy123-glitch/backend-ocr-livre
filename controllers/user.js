@@ -1,8 +1,17 @@
 import bcrypt from "bcrypt";
 import jsonwebtoken from "jsonwebtoken";
-import 'dotenv/config';
+import "dotenv/config";
 import User from "../models/User.js";
 
+const MSG_ERREUR_500 = "Erreur interne du serveur";
+
+const MSG_ERREUR_400 = "Parametre invalide";
+
+const MSG_ERREUR_403 = "Accès interdit";
+
+const MSG_ERREUR_404 = "Ressource inexistante";
+
+const MSG_SUCCES_201 = "Ressource créée avec succès";
 /**
  * Créer un utilisateur et stocke le mot de passe en has dans la basse de donnée
  * @param {*} req
@@ -11,7 +20,7 @@ import User from "../models/User.js";
 export const signup = async (req, res) => {
     try {
         if (req.body.password === undefined || req.body.email === undefined) {
-            throw new Error();
+            res.status(400).json({ message: MSG_ERREUR_400 });
         }
 
         const hash = await bcrypt.hash(req.body.password, 10);
@@ -23,7 +32,7 @@ export const signup = async (req, res) => {
         res.status(201).json({ message: "Utilisateur crée" });
     } catch (error) {
         console.error(error);
-        res.status(400).json({ message: "Email ou mot de passe incorrect" });
+        res.status(500).json({ message: MSG_ERREUR_500 });
     }
 };
 
@@ -37,13 +46,13 @@ export const login = async (req, res) => {
     try {
         const user = await User.findOne({ email: req.body.email });
         if (user === null) {
-            throw new Error("Email ou mot de passe incorrect");
+            res.status(400).json({ message: MSG_ERREUR_400 });
         }
 
         // Compare les mot de passe entre celui dans la base de donnée (deja hash) et celui dans la requete (non hash)
         const valid = await bcrypt.compare(req.body.password, user.password);
         if (!valid) {
-            res.status(401).json({ message: "Email ou mot de passe incorrect" });
+            res.status(400).json({ message: MSG_ERREUR_400 });
         }
 
         res.status(200).json({
@@ -55,6 +64,6 @@ export const login = async (req, res) => {
         });
     } catch (error) {
         console.error(error);
-        res.status(400).json({ message: "Email ou mot de passe incorrect" });
+        res.status(500).json({ message: MSG_ERREUR_500 });
     }
 };

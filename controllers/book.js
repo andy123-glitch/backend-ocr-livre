@@ -1,6 +1,17 @@
 import { Book, Rating } from "../models/Book.js";
 import fs from "fs";
 
+const MSG_ERREUR_500 = "Erreur interne du serveur";
+
+const MSG_ERREUR_400 = "Parametre invalide";
+
+
+const MSG_ERREUR_403 = "Accès interdit";
+
+const MSG_ERREUR_404 = "Ressource inexistante";
+
+const MSG_SUCCES_201 = "Ressource créée avec succès";
+
 /**
  * Permet de récuperer tous les livres
  * @param {*} req
@@ -12,7 +23,7 @@ export const getBooks = async (req, res) => {
         res.status(200).json(books);
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: "Erreur" });
+        res.status(500).json({ message: MSG_ERREUR_500 });
     }
 };
 
@@ -23,11 +34,12 @@ export const getBooks = async (req, res) => {
  */
 export const getOneBook = async (req, res) => {
     try {
-        const book = await Book.find({ _id: req.params.id }).populate("ratings").exec();
-        res.status(200).json(book[0]);
+        const book = await Book.findById(req.params.id).populate("ratings").exec();
+        if (!book) res.status(404).json({ error: MSG_ERREUR_404 });
+        res.status(200).json(book);
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: "Erreur" });
+        res.status(400).json({ error: MSG_ERREUR_400 });
     }
 };
 
@@ -43,7 +55,7 @@ export const getBestRatingsBooks = async (req, res) => {
         res.status(200).json(books);
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: "Erreur" });
+        res.status(500).json({ message: MSG_ERREUR_500 });
     }
 };
 
@@ -60,6 +72,7 @@ export const createOneBook = async (req, res) => {
             grade: body.ratings[0].grade,
         });
         await rating.save();
+
         delete body.ratings;
         delete body.userId;
         const url = `http://${req.get("host")}/${req.file.destination}/${req.file.filename}`;
@@ -70,10 +83,11 @@ export const createOneBook = async (req, res) => {
             imageUrl: url,
         });
         await book.save();
-        res.status(200).json({ message: "Livre crée" });
+
+        res.status(201).json({ message: MSG_SUCCES_201 });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: "Erreur" });
+        res.status(500).json({ message: MSG_ERREUR_500 });
     }
 };
 
@@ -87,7 +101,7 @@ export const deleteOneBook = async (req, res) => {
     try {
         const book = await Book.findById({ _id: req.params.id });
         if (book.userId !== req.auth.userId) {
-            throw new Error("Unauthorize");
+            res.status(403).json({ message: MSG_ERREUR_403 });
         }
         const url = "images/" + book.imageUrl.split("/images/")[1];
         // Permet de supprimer un fichier et appele une fonction quand le fichier et supprimer ou qu'une erreur s'est produite
@@ -95,15 +109,14 @@ export const deleteOneBook = async (req, res) => {
             try {
                 if (err) throw err;
                 await book.deleteOne();
-                console.log(url, " a ete supprime");
-                res.status(200).json({ message: "Livre supprimée" });
+                res.status(200).json({ message: "Livre supprime" });
             } catch (error) {
-                res.status(500).json({ message: "Erreur" });
+                res.status(500).json({ message: MSG_ERREUR_500 });
             }
         });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: "Erreur" });
+        res.status(500).json({ message: MSG_ERREUR_500 });
     }
 };
 
@@ -116,8 +129,10 @@ export const deleteOneBook = async (req, res) => {
 export const updateBook = async (req, res) => {
     try {
         const oldBook = await Book.findById({ _id: req.params.id });
+        if (!oldBook) res.status(404).json({ error: MSG_ERREUR_404 });
+
         if (oldBook.userId !== req.auth.userId) {
-            throw new Error("Unauthorize");
+            res.status(403).json({ message: MSG_ERREUR_403 });
         }
 
         let book = req.body;
@@ -144,7 +159,7 @@ export const updateBook = async (req, res) => {
         res.status(200).json({ message: "Livre modifie" });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: "Erreur" });
+        res.status(500).json({ message: MSG_ERREUR_500 });
     }
 };
 
@@ -158,19 +173,20 @@ export const updateBook = async (req, res) => {
 export const addRating = async (req, res) => {
     try {
         if (req.body.userId != req.auth.userId) {
-            throw new Error("User id incompatible");
+            res.status(403).json({ message: MSG_ERREUR_403 });
         }
-        if (isNaN(req.body.rating)) {
-            throw new Error("Rating dans body n'est pas un nombre");
-        }
-        if (req.body.rating >= 6 || req.body.rating <= 0) {
-            throw new Error("Rating est trop grand ou petit");
+        if (isNaN(req.body.rating) || req.body.rating >= 6 || req.body.rating <= 0) {
+            res.status(404).json({ message: MSG_ERREUR_400 });
         }
         const book = await Book.findById(req.params.id).populate("ratings").exec();
+        if (!book) res.status(404).json({ error: MSG_ERREUR_404 });
+
         const found = book.ratings.find(({ userId }) => req.auth.userId === userId);
+
         if (found !== undefined) {
-            throw new Error("L'utilisateur a deja vote");
+            res.status(403).json({ message: MSG_ERREUR_403 });
         }
+
         const rating = await new Rating({
             userId: req.auth.userId,
             grade: req.body.rating,
@@ -187,6 +203,6 @@ export const addRating = async (req, res) => {
         res.status(201).json(book);
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: "Erreur" });
+        res.status(500).json({ message: MSG_ERREUR_500 });
     }
 };
